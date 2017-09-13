@@ -25,8 +25,10 @@ class Window:
         self.dirRoadEntry = Tkinter.Entry(master, textvariable=self.dirRoad, width=60, state='readonly')
         self.chooseDirButton = Tkinter.Button(master, text='选择目录', command=self.chooseDir)
 
-        self.readSNButton = Tkinter.Button(master, text='读取S/N',command=self.readSN)
-        self.runButton = Tkinter.Button(master, text='开始工作')
+        self.readSNButton = Tkinter.Button(master, text='读取S/N', command=self.readSN)
+        self.runButton = Tkinter.Button(master, text='开始工作', command=self.run)
+
+        self.workModel = ttk.Combobox(master, values=['T1/T2', 'T3'], width=5, state='readonly')
 
         self.tvScrollBar = Tkinter.Scrollbar(master)
         self.treeview = ttk.Treeview(master, columns=('c1', 'c2', 'c3', 'c4', 'c5'), show="headings", height=20,
@@ -63,13 +65,14 @@ class Window:
         self.dirRoadEntry.grid(row=1, column=1, sticky='ew')
         self.chooseDirButton.grid(row=1, column=2)
         self.runButton.grid(row=1, column=3, sticky='w')
+        self.workModel.grid(row=1, column=4, sticky='w')
 
         self.treeview.grid(row=3, column=0, columnspan=4)
         self.tvScrollBar.grid(row=3, column=4, sticky='ns')
 
         self.SNEntry.grid(row=4, column=0, sticky='we')
         self.addSNButton.grid(row=4, column=1, sticky='w')
-        self.deleteSNButton.grid(row=4, column=2, sticky='w')
+        self.deleteSNButton.grid(row=4, column=1, sticky='e')
         self.clearConsolsButton.grid(row=4, column=3, sticky='e')
 
         self.consoloText.grid(row=5, column=0, columnspan=4)
@@ -102,8 +105,18 @@ class Window:
 
     def addSN(self):
         inputSN = self.SNEntry.get()
-        self.treeview.insert('', Tkinter.END, values=(inputSN))
+        for SN in self.dp.SNArr:
+            if SN == inputSN:
+                return
+        self.treeview.insert('', Tkinter.END, values=inputSN)
         self.dp.SNArr.append(inputSN)
 
     def run(self):
-        pass           #todo
+        mode = ('T3', 'T1/T2')[self.workModel.get() == 'T3']
+        self.dp.searchReadAndCompare(self.dirRoad.get(), mode)
+        treeviewItems = self.treeview.get_children()
+        for idx, item in enumerate(treeviewItems):
+            SN = self.dp.SNArr[idx]
+            value = self.dp.SNDict[SN]
+            self.treeview.item(item, values=(SN, value[0], value[1], value[2], value[3]))
+
