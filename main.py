@@ -1,8 +1,10 @@
 from window import *
+from dataProcess import *
 import Tkinter
 
 if __name__ == '__main__':
     root = Tkinter.Tk()
-    w = Window(root)
+    dP = DataProcess()
+    w = Window(root, dP)
     root.mainloop()
     pass

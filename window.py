@@ -7,7 +7,9 @@ import tkFileDialog
 class Window:
     """docstring for Window"""
 
-    def __init__(self, master=None):
+    def __init__(self, master=None, dp=None):
+        self.dp = dp
+
         self.master = master
 
         master.resizable(False, False)
@@ -23,7 +25,7 @@ class Window:
         self.dirRoadEntry = Tkinter.Entry(master, textvariable=self.dirRoad, width=60, state='readonly')
         self.chooseDirButton = Tkinter.Button(master, text='选择目录', command=self.chooseDir)
 
-        self.readSNButton = Tkinter.Button(master, text='读取S/N')
+        self.readSNButton = Tkinter.Button(master, text='读取S/N',command=self.readSN)
         self.runButton = Tkinter.Button(master, text='开始工作')
 
         self.tvScrollBar = Tkinter.Scrollbar(master)
@@ -37,8 +39,8 @@ class Window:
         self.treeview.heading('c5', text='测试文件')
 
         self.SNEntry = Tkinter.Entry(master)
-        self.addSNButton = Tkinter.Button(master, text='手动添加S/N')
-        self.deleteSNButton = Tkinter.Button(master, text='手动删除S/N')
+        self.addSNButton = Tkinter.Button(master, text='手动添加S/N', command=self.addSN)
+        self.deleteSNButton = Tkinter.Button(master, text='手动删除S/N',command=self.deleteSN)
         self.clearConsolsButton = Tkinter.Button(master, text='清除consolo')
 
         self.ctScrollBar = Tkinter.Scrollbar(master)
@@ -86,3 +88,22 @@ class Window:
         self.runButton['state'] = Tkinter.ACTIVE
         pass
 
+    def readSN(self):
+        self.dp.readSN(self.fileRoad.get())
+        for SN in self.dp.SNArr:
+            self.treeview.insert('', Tkinter.END, values=(SN))
+        self.chooseDirButton['state'] = Tkinter.ACTIVE
+
+    def deleteSN(self):
+        selected_items = self.treeview.selection()
+        for item in selected_items:
+            self.dp.SNArr.remove(self.treeview.item(item, 'values')[0])
+            self.treeview.delete(item)
+
+    def addSN(self):
+        inputSN = self.SNEntry.get()
+        self.treeview.insert('', Tkinter.END, values=(inputSN))
+        self.dp.SNArr.append(inputSN)
+
+    def run(self):
+        pass           #todo
