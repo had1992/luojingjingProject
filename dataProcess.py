@@ -49,22 +49,32 @@ class DataProcess:
             self.mP.myPrint(text='搜索'+SN+':')
             fileList = self.__search(path, SN)
             if len(fileList) == 0:
-                self.mP.myPrint(text='找不到匹配的文件')
+                self.mP.myPrintToFile('SN:'+SN+' 找不到匹配的文件')
+                self.mP.myPrint(text='找不到匹配的文件\n')
                 self.SNDict[SN] = ['0','Null','Null','Null']
                 continue
             fileDict = {}
             passInfoRowIdx = (6,7)[SN[0] == 'H']
+            ALLFail = True
             for file in fileList:
                 t, info = readFunc(file, passInfoRowIdx=passInfoRowIdx)
+                if info == 'PASS':
+                    ALLFail = False
                 self.mP.myPrint(text=self.__getFileNameFromRoad(file)+' | '+t+' | '+info)
                 fileDict[t] = [file, info]
-                sortedTime = sorted(fileDict.keys(), cmp=self.__compareTime, reverse=False)
-                self.SNDict[SN] = [str(len(fileList)),
-                                   sortedTime[0],
-                                   fileDict[sortedTime[0]][1],
-                                   self.__getFileNameFromRoad(fileDict[sortedTime[0]][0])]
+            sortedTime = sorted(fileDict.keys(), cmp=self.__compareTime, reverse=False)
+            self.SNDict[SN] = [str(len(fileList)),
+                                sortedTime[0],
+                                fileDict[sortedTime[0]][1],
+                                self.__getFileNameFromRoad(fileDict[sortedTime[0]][0])]
+            if not self.SNDict[SN][2] == 'PASS':
+                if ALLFail:
+                    self.mP.myPrintToFile('SN:'+SN+' 所有测试不通过')
+                else:
+                    self.mP.myPrintToFile('SN:'+SN+' 最近的测试不通过')
             self.mP.myPrint(text='')
         self.mP.myPrint(text='\n搜索完成')
+        # self.mP.clearTxt()
 
     def __search(self, path, word):
         fileList = []

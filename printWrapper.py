@@ -29,4 +29,4 @@ class PrintWrapper:
         self.failTxt.write(failInfo+'\r\n')
 
     def clearTxt(self):
-        pass
+        self.failTxt.truncate()
