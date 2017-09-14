@@ -12,6 +12,7 @@ import printWrapper
 class DataProcess:
     def __init__(self,pW=None):
         self.mP = pW
+        self.SNMode = []
         self.SNArr = []
         self.SNDict = {}
 
@@ -23,48 +24,51 @@ class DataProcess:
         for i, ustr in enumerate(SNcol):
             if ustr != u'' and i != 0:
                 SNstr = ustr.encode('utf-8')
-                SNstr = SNstr[1:]
+                # SNstr = SNstr[1:]
                 self.SNArr.append(SNstr)
-        self.mP.myPrint(printWrapper.SUCCESS, '读取' + str(len(self.SNArr)) + '个SN号')
+        self.mP.myPrint(printWrapper.SUCCESS, '读取' + str(len(self.SNArr)) + '个SN号\n')
 
     def addSN(self, newSN):
         for SN in self.SNArr:
             if SN == newSN:
-                self.mP.myPrint(printWrapper.WARN, SN + ' 已存在，请勿重复添加')
+                self.mP.myPrint(printWrapper.WARN, 'SN:' + SN + ' 已存在，请勿重复添加\n')
                 return False
         self.SNArr.append(newSN)
-        self.mP.myPrint(printWrapper.SUCCESS, newSN + ' 已添加')
+        self.mP.myPrint(printWrapper.SUCCESS, 'SN:' + newSN + ' 已添加\n')
         return True
 
     def deleteSN(self, SN):
         self.SNArr.remove(SN)
-        self.mP.myPrint(printWrapper.SUCCESS, SN + ' 已删除')
+        self.mP.myPrint(printWrapper.SUCCESS, 'SN:' + SN + ' 已删除\n')
 
     def searchReadAndCompare(self, path, mode):
         self.SNDict.clear()
-        readFunc = (self.__readInT3, self.__readInT1T2)[mode == 'T3']
+        readFunc = (self.__readInT1T2, self.__readInT3)[mode == 'T3']
         self.mP.myPrintInfo({'SN个数': str(len(self.SNArr)), '文件夹路径': path, '工作模式': mode, 'text': '开始搜索！'})
         for SN in self.SNArr:
-            self.mP.myPrint(text='开始搜索'+SN+':')
+            self.mP.myPrint(text='搜索'+SN+':')
             fileList = self.__search(path, SN)
             if len(fileList) == 0:
-                self.mP.myPrint(text='找不到匹配的文件\n')
+                self.mP.myPrint(text='找不到匹配的文件')
+                self.SNDict[SN] = ['0','Null','Null','Null']
                 continue
             fileDict = {}
+            passInfoRowIdx = (6,7)[SN[0] == 'H']
             for file in fileList:
-                t, info = readFunc(file)
+                t, info = readFunc(file, passInfoRowIdx=passInfoRowIdx)
                 self.mP.myPrint(text=self.__getFileNameFromRoad(file)+' | '+t+' | '+info)
                 fileDict[t] = [file, info]
-                self.mP.myPrint(text='')
                 sortedTime = sorted(fileDict.keys(), cmp=self.__compareTime, reverse=False)
                 self.SNDict[SN] = [str(len(fileList)),
                                    sortedTime[0],
                                    fileDict[sortedTime[0]][1],
                                    self.__getFileNameFromRoad(fileDict[sortedTime[0]][0])]
-            self.mP.myPrint(text='\n')
+            self.mP.myPrint(text='')
+        self.mP.myPrint(text='\n搜索完成')
 
     def __search(self, path, word):
         fileList = []
+        word = word[1:]
         for filename in os.listdir(path):
             fp = os.path.join(path, filename)
             if os.path.isfile(fp) and word in filename:
@@ -73,32 +77,37 @@ class DataProcess:
                 self.__search(fp, word)
         return fileList
 
-    def __readInT3(self, file):
+    def __readInT3(self, file, passInfoRowIdx, timeRowIdx=1):
         passInfo = ''
         Time = ''
         with open(file, 'rb') as f:
             reader = csv.reader((line.replace('\0', '') for line in f))
             for i, row in enumerate(reader):
-                if i == 1:
+                if i == timeRowIdx:
                     Time = row[1]
-                if i == 7:
+                if i == passInfoRowIdx:
                     passInfo = row[1]
                     break
             return Time, passInfo
 
-    def __readInT1T2(self, file):  # todo
+    def __readInT1T2(self, file, passInfoRowIdx=1, timeRowIdx=1):  # todo
         passInfo = 'PASS'
         Time = ''
         with open(file, 'rb') as f:
             reader = csv.reader((line.replace('\0', '') for line in f))
             for i, row in enumerate(reader):
-                if i == 1:
+                if i == timeRowIdx:
                     Time = row[3]
                     break
         return Time, passInfo
 
     def __timeStrToInt(self, str):
-        temp = re.findall(r'(.+)/(.+)/(.+) (.+):(.+):(.+) (.+)', str)
+        is12Style = (str[-2:] == 'PM' or str[-2:] == 'AM')
+        temp = (re.findall(r'(.+)/(.+)/(.+) (.+):(.+):(.+)', str),
+                re.findall(r'(.+)/(.+)/(.+) (.+):(.+):(.+) (.+)', str))[is12Style]
+        if len(temp) == 0:
+            self.mP.myPrint(printWrapper.ERROR,'时间格式不对或者工作模式不匹配')
+            return
         Arr = []
         for i, str in enumerate(temp[0]):
             if i == 6:
@@ -127,40 +136,3 @@ class DataProcess:
                 idx = i
                 break
         return road[(idx + 1):l]
-
-#
-#
-#
-
-#
-# if __name__ == '__main__':
-#
-# 	SN_FILE_ROAD = '/Users/had/Desktop/xxx.xlsx' #SN file road
-# 	TEST_FILE_DIR_ROAD = '/Users/had/Desktop'    #test file dir road
-# 	COPY_TO_DIR_ROAD = '/Users/had/Desktop/Test'
-#
-# 	if not os.path.exists(COPY_TO_DIR_ROAD):
-# 		os.mkdir(COPY_TO_DIR_ROAD)
-# 	else:
-# 		shutil.rmtree(COPY_TO_DIR_ROAD)
-# 		os.mkdir(COPY_TO_DIR_ROAD)
-# 	myPrint 'create dir success\n'
-#
-# 	ALL_SN = readSN(SN_FILE_ROAD)
-# 	myPrint ALL_SN
-# 	myPrint 'S/N read Ok\n'
-#
-# 	for SN in ALL_SN:
-# 		testFileDict = {}
-# 		files = search(TEST_FILE_DIR_ROAD, SN)
-# 		for file in files:
-# 			time,info = readTestFile(file)
-# 			myPrint 'S/N:'+'H'+SN+'|time:'+time+'|result:'+info
-# 			if info == 'PASS':
-# 				testFileDict[time] = file
-# 		if len(testFileDict):
-# 			x = sorted(testFileDict.keys(),cmp = compareTime)
-# 			myPrint 'From S/N:'+'H'+SN+', choose time:'+x[0]+''
-# 			readyToCopyFileName = testFileDict[x[0]]
-# 			shutil.copy(readyToCopyFileName,COPY_TO_DIR_ROAD+'/'+getFileNameFromRoad(readyToCopyFileName))
-# 			myPrint 'copy success\n'

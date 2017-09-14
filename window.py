@@ -46,7 +46,7 @@ class Window:
         self.SNEntry = Tkinter.Entry(master)
         self.addSNButton = Tkinter.Button(master, text='手动添加S/N', command=self.addSN)
         self.deleteSNButton = Tkinter.Button(master, text='手动删除S/N',command=self.deleteSN)
-        self.clearConsolsButton = Tkinter.Button(master, text='清除consolo')
+        self.clearConsolsButton = Tkinter.Button(master, text='清除consolo', command=self.clearConsolo)
 
         self.ctScrollBar = Tkinter.Scrollbar(master)
         self.consoloText = Tkinter.Text(master, height=20, width=142, yscrollcommand=self.ctScrollBar.set)
@@ -84,15 +84,16 @@ class Window:
 
     def chooseSNFile(self):
         fileName = tkFileDialog.askopenfilename(initialdir='.', filetypes=[('xls files', '*.xls;*.xlsx')])
-        self.fileRoad.set(fileName)
-        self.readSNButton['state'] = Tkinter.ACTIVE
+        if fileName != '':
+            self.fileRoad.set(fileName)
+            self.readSNButton['state'] = Tkinter.ACTIVE
         pass
 
     def chooseDir(self):
         dirName = tkFileDialog.askdirectory(initialdir='.')
-        dirName = 'C:/Users/304-had/Documents/Tencent Files/851983150/FileRecv/T3'
-        self.dirRoad.set(dirName)
-        self.runButton['state'] = Tkinter.ACTIVE
+        if dirName != '':
+            self.dirRoad.set(dirName)
+            self.runButton['state'] = Tkinter.ACTIVE
         pass
 
     def readSN(self):
@@ -106,7 +107,7 @@ class Window:
     def deleteSN(self):
         selected_items = self.treeview.selection()
         for item in selected_items:
-            self.dp.SNArr.remove(self.treeview.item(item, 'values')[0])
+            self.dp.deleteSN(self.treeview.item(item, 'values')[0])
             self.treeview.delete(item)
 
     def addSN(self):
@@ -122,11 +123,14 @@ class Window:
         os.startfile(self.dirRoad.get()+'/'+preOpenFileName)
 
     def run(self):
-        mode = ('T3', 'T1/T2')[self.workMode.get() == 'T3']
+        mode = ('T1/T2','T3')[self.workMode.get() == 'T3']
         self.dp.searchReadAndCompare(self.dirRoad.get(), mode)
         treeviewItems = self.treeview.get_children()
         for idx, item in enumerate(treeviewItems):
             SN = self.dp.SNArr[idx]
             value = self.dp.SNDict[SN]
             self.treeview.item(item, values=(SN, value[0], value[1], value[2], value[3]))
+
+    def clearConsolo(self):
+        self.consoloText.delete(1.0,Tkinter.END)
 
