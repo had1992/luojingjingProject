@@ -3,6 +3,7 @@
 import ttk
 import Tkinter
 import tkFileDialog
+import os
 
 class Window:
     """docstring for Window"""
@@ -28,11 +29,13 @@ class Window:
         self.readSNButton = Tkinter.Button(master, text='读取S/N', command=self.readSN)
         self.runButton = Tkinter.Button(master, text='开始工作', command=self.run)
 
-        self.workModel = ttk.Combobox(master, values=['T1/T2', 'T3'], width=5, state='readonly')
+        self.workMode = ttk.Combobox(master, values=['T1/T2', 'T3'], width=5, state='readonly')
+        self.workMode.current(0)
 
         self.tvScrollBar = Tkinter.Scrollbar(master)
         self.treeview = ttk.Treeview(master, columns=('c1', 'c2', 'c3', 'c4', 'c5'), show="headings", height=20,
                                      yscrollcommand=self.tvScrollBar.set)
+        self.treeview.bind('<Double-1>',self.doubleCLickTreeview)
         self.tvScrollBar.configure(command=self.treeview.yview)
         self.treeview.heading('c1', text='S/N号')
         self.treeview.heading('c2', text='匹配文件数')
@@ -65,7 +68,7 @@ class Window:
         self.dirRoadEntry.grid(row=1, column=1, sticky='ew')
         self.chooseDirButton.grid(row=1, column=2)
         self.runButton.grid(row=1, column=3, sticky='w')
-        self.workModel.grid(row=1, column=4, sticky='w')
+        self.workMode.grid(row=1, column=3, sticky='e')
 
         self.treeview.grid(row=3, column=0, columnspan=4)
         self.tvScrollBar.grid(row=3, column=4, sticky='ns')
@@ -79,19 +82,21 @@ class Window:
         self.ctScrollBar.grid(row=5, column=4, sticky='ns')
 
     def chooseSNFile(self):
-        fileName = tkFileDialog.askopenfilename(initialdir='.', filetypes=[('xls files', '*.xls'),
-                                                                           ('xlsx files', '*.xlsx')])
+        fileName = tkFileDialog.askopenfilename(initialdir='.', filetypes=[('xls files', '*.xls;*.xlsx')])
         self.fileRoad.set(fileName)
         self.readSNButton['state'] = Tkinter.ACTIVE
         pass
 
     def chooseDir(self):
         dirName = tkFileDialog.askdirectory(initialdir='.')
+        dirName = 'C:/Users/304-had/Documents/Tencent Files/851983150/FileRecv/T3'
         self.dirRoad.set(dirName)
         self.runButton['state'] = Tkinter.ACTIVE
         pass
 
     def readSN(self):
+        treeviewItems = self.treeview.get_children()
+        [self.treeview.delete(item) for item in treeviewItems]
         self.dp.readSN(self.fileRoad.get())
         for SN in self.dp.SNArr:
             self.treeview.insert('', Tkinter.END, values=(SN))
@@ -105,14 +110,18 @@ class Window:
 
     def addSN(self):
         inputSN = self.SNEntry.get()
-        for SN in self.dp.SNArr:
-            if SN == inputSN:
-                return
-        self.treeview.insert('', Tkinter.END, values=inputSN)
-        self.dp.SNArr.append(inputSN)
+        if self.dp.addSN(inputSN):
+            self.treeview.insert('', Tkinter.END, values=inputSN)
+
+    def doubleCLickTreeview(self, event):
+        item = self.treeview.selection()[0]
+        preOpenFileName = self.treeview.item(item,'values')[4]
+        if preOpenFileName == 'Null':
+            return
+        os.startfile(self.dirRoad.get()+'/'+preOpenFileName)
 
     def run(self):
-        mode = ('T3', 'T1/T2')[self.workModel.get() == 'T3']
+        mode = ('T3', 'T1/T2')[self.workMode.get() == 'T3']
         self.dp.searchReadAndCompare(self.dirRoad.get(), mode)
         treeviewItems = self.treeview.get_children()
         for idx, item in enumerate(treeviewItems):
