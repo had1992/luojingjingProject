@@ -4,7 +4,10 @@ import Tkinter
 
 if __name__ == '__main__':
     root = Tkinter.Tk()
-    dP = DataProcess()
+
+    pW = printWrapper.PrintWrapper()
+    dP = DataProcess(pW)
     w = Window(root, dP)
+
     root.mainloop()
     pass

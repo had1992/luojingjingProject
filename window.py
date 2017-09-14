@@ -50,6 +50,7 @@ class Window:
 
         self.ctScrollBar = Tkinter.Scrollbar(master)
         self.consoloText = Tkinter.Text(master, height=20, width=142, yscrollcommand=self.ctScrollBar.set)
+        self.dp.mP.setTextConsolo(self.consoloText)
         self.ctScrollBar.configure(command=self.consoloText.yview)
 
         self.chooseDirButton['state'] = Tkinter.DISABLED
@@ -99,7 +100,7 @@ class Window:
         [self.treeview.delete(item) for item in treeviewItems]
         self.dp.readSN(self.fileRoad.get())
         for SN in self.dp.SNArr:
-            self.treeview.insert('', Tkinter.END, values=(SN))
+            self.treeview.insert('', Tkinter.END, values=SN)
         self.chooseDirButton['state'] = Tkinter.ACTIVE
 
     def deleteSN(self):
