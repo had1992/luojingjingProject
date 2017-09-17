@@ -13,7 +13,7 @@ class Window:
 
         self.master = master
 
-        master.resizable(False, False)
+        # master.resizable(False, False)
 
         self.fileRoad = Tkinter.StringVar(master)
         self.dirRoad = Tkinter.StringVar(master)

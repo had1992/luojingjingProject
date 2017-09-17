@@ -17,6 +17,7 @@ class DataProcess:
         self.SNDict = {}
 
     def readSN(self, fileName):
+        repeatNum = 0
         del self.SNArr[:]
         data = xlrd.open_workbook(fileName)  # open an excel
         table = data.sheets()[0]  # get a sheet by index
@@ -24,15 +25,17 @@ class DataProcess:
         for i, ustr in enumerate(SNcol):
             if ustr != u'' and i != 0:
                 SNstr = ustr.encode('utf-8')
-                # SNstr = SNstr[1:]
+                if self.checkRepeat(SNstr):
+                    repeatNum += 1
+                    self.mP.myPrint(printWrapper.WARN, 'SN:' + SNstr + ' 重复')
+                    continue
                 self.SNArr.append(SNstr)
-        self.mP.myPrint(printWrapper.SUCCESS, '读取' + str(len(self.SNArr)) + '个SN号\n')
+        self.mP.myPrint(printWrapper.SUCCESS, '读取' + str(len(self.SNArr)) + '个SN号，重复' + str(repeatNum) + '个\n')
 
     def addSN(self, newSN):
-        for SN in self.SNArr:
-            if SN == newSN:
-                self.mP.myPrint(printWrapper.WARN, 'SN:' + SN + ' 已存在，请勿重复添加\n')
-                return False
+        if self.checkRepeat(newSN):
+            self.mP.myPrint(printWrapper.WARN, 'SN:' + newSN + ' 已存在，请勿重复添加\n')
+            return False
         self.SNArr.append(newSN)
         self.mP.myPrint(printWrapper.SUCCESS, 'SN:' + newSN + ' 已添加\n')
         return True
@@ -76,6 +79,12 @@ class DataProcess:
         self.mP.myPrint(text='\n搜索完成')
         # self.mP.clearTxt()
 
+    def checkRepeat(self, newSN):
+        for SN in self.SNArr:
+            if SN == newSN:
+                return True
+        return False
+
     def __search(self, path, word):
         fileList = []
         word = word[1:]
@@ -100,7 +109,7 @@ class DataProcess:
                     break
             return Time, passInfo
 
-    def __readInT1T2(self, file, passInfoRowIdx=1, timeRowIdx=1):  # todo
+    def __readInT1T2(self, file, passInfoRowIdx=1, timeRowIdx=1):
         passInfo = 'PASS'
         Time = ''
         with open(file, 'rb') as f:
