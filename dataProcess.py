@@ -46,8 +46,12 @@ class DataProcess:
         return True
 
     def deleteSN(self, SN):
-        self.SNArr.remove(SN)
-        self.mP.myPrint(printWrapper.SUCCESS, 'SN:' + SN + ' 已删除\n')
+    	if self.__checkRepeat(SN):
+    		self.SNArr.remove(SN)
+        	self.mP.myPrint(printWrapper.SUCCESS, 'SN:' + SN + ' 已删除\n')
+        else:
+        	self.mP.myPrint(printWrapper.ERROR, 'SN:' + SN + ' 不存在，无法删除\n')
+        
 
     def searchReadAndCompare(self, path, mode):
         if os.path.exists('./Test'):

@@ -71,16 +71,16 @@ class Window:
         self.runButton.grid(row=1, column=3, sticky='w')
         self.workMode.grid(row=1, column=3, sticky='e')
 
-        self.treeview.grid(row=3, column=0, columnspan=4)
-        self.tvScrollBar.grid(row=3, column=4, sticky='ns')
+        self.treeview.grid(row=2, column=0, columnspan=4)
+        self.tvScrollBar.grid(row=2, column=4, sticky='ns')
 
-        self.SNEntry.grid(row=4, column=0, sticky='we')
-        self.addSNButton.grid(row=4, column=1, sticky='w')
-        self.deleteSNButton.grid(row=4, column=1, sticky='e')
-        self.clearConsolsButton.grid(row=4, column=3, sticky='e')
+        self.SNEntry.grid(row=3, column=0, sticky='we')
+        self.addSNButton.grid(row=3, column=1, sticky='w')
+        self.deleteSNButton.grid(row=3, column=1, sticky='e')
+        self.clearConsolsButton.grid(row=3, column=3, sticky='e')
 
-        self.consoloText.grid(row=5, column=0, columnspan=4)
-        self.ctScrollBar.grid(row=5, column=4, sticky='ns')
+        self.consoloText.grid(row=4, column=0, columnspan=4)
+        self.ctScrollBar.grid(row=4, column=4, sticky='ns')
 
     def chooseSNFile(self):
         fileName = tkFileDialog.askopenfilename(initialdir='.', filetypes=[('xls files', '*.xls;*.xlsx')])
@@ -105,10 +105,17 @@ class Window:
         self.chooseDirButton['state'] = Tkinter.ACTIVE
 
     def deleteSN(self):
-        selected_items = self.treeview.selection()
-        for item in selected_items:
-            self.dp.deleteSN(self.treeview.item(item, 'values')[0])
-            self.treeview.delete(item)
+        if self.SNEntry.get() != '':
+            self.dp.deleteSN(self.SNEntry.get())
+            items = self.treeview.get_children()
+            for item in items:
+                if(self.SNEntry.get() == self.treeview.item(item, 'values')[0]):
+                    self.treeview.delete(item)
+        else:
+            selected_items = self.treeview.selection()
+            for item in selected_items:
+                self.dp.deleteSN(self.treeview.item(item, 'values')[0])
+                self.treeview.delete(item)
 
     def addSN(self):
         inputSN = self.SNEntry.get()
@@ -119,9 +126,8 @@ class Window:
     def doubleCLickTreeview(self, event):
         item = self.treeview.selection()[0]
         preOpenFileName = self.treeview.item(item,'values')[4]
-        if preOpenFileName == 'Null':
-            return
-        os.startfile(self.dirRoad.get()+'/'+preOpenFileName)
+        if preOpenFileName != 'Null':
+            os.startfile(self.dirRoad.get()+'/'+preOpenFileName)
 
     def run(self):
         mode = ('T1/T2','T3')[self.workMode.get() == 'T3']
