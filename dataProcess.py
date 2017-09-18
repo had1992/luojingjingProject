@@ -25,15 +25,20 @@ class DataProcess:
         for i, ustr in enumerate(SNcol):
             if ustr != u'' and i != 0:
                 SNstr = ustr.encode('utf-8')
-                if self.checkRepeat(SNstr):
+                if self.__checkRepeat(SNstr):
                     repeatNum += 1
                     self.mP.myPrint(printWrapper.WARN, 'SN:' + SNstr + ' 重复')
+                    self.mP.myPrintToFile('SN:' + SNstr + ' 重复')
                     continue
                 self.SNArr.append(SNstr)
         self.mP.myPrint(printWrapper.SUCCESS, '读取' + str(len(self.SNArr)) + '个SN号，重复' + str(repeatNum) + '个\n')
 
+
     def addSN(self, newSN):
-        if self.checkRepeat(newSN):
+    	if newSN == '':
+    		self.mP.myPrint(printWrapper.WARN, '请在左边填写SN\n')
+    		return False
+        if self.__checkRepeat(newSN):
             self.mP.myPrint(printWrapper.WARN, 'SN:' + newSN + ' 已存在，请勿重复添加\n')
             return False
         self.SNArr.append(newSN)
@@ -45,6 +50,11 @@ class DataProcess:
         self.mP.myPrint(printWrapper.SUCCESS, 'SN:' + SN + ' 已删除\n')
 
     def searchReadAndCompare(self, path, mode):
+        if os.path.exists('./Test'):
+            shutil.rmtree('./Test')
+        os.mkdir('./Test')
+        self.mP.myPrint(text='创建文件夹成功\n')
+
         self.SNDict.clear()
         readFunc = (self.__readInT1T2, self.__readInT3)[mode == 'T3']
         self.mP.myPrintInfo({'SN个数': str(len(self.SNArr)), '文件夹路径': path, '工作模式': mode, 'text': '开始搜索！'})
@@ -72,14 +82,20 @@ class DataProcess:
                                 self.__getFileNameFromRoad(fileDict[sortedTime[0]][0])]
             if not self.SNDict[SN][2] == 'PASS':
                 if ALLFail:
+                    self.mP.myPrint(text='SN:'+SN+' 所有测试不通过\n')
                     self.mP.myPrintToFile('SN:'+SN+' 所有测试不通过')
                 else:
+                    self.mP.myPrint(text='SN:'+SN+' 最近的测试不通过\n')
                     self.mP.myPrintToFile('SN:'+SN+' 最近的测试不通过')
+            else:
+                readyToCopyFileRoad = fileDict[sortedTime[0]][0]
+                readyToCopyFileName = self.__getFileNameFromRoad(readyToCopyFileRoad)
+                shutil.copy(readyToCopyFileRoad,'./Test'+'/'+readyToCopyFileName)
+                self.mP.myPrint(text='文件:'+readyToCopyFileName+' 复制成功\n')
             self.mP.myPrint(text='')
         self.mP.myPrint(text='\n搜索完成')
-        # self.mP.clearTxt()
 
-    def checkRepeat(self, newSN):
+    def __checkRepeat(self, newSN):
         for SN in self.SNArr:
             if SN == newSN:
                 return True
@@ -109,7 +125,7 @@ class DataProcess:
                     break
             return Time, passInfo
 
-    def __readInT1T2(self, file, passInfoRowIdx=1, timeRowIdx=1):
+    def __readInT1T2(self, file, passInfoRowIdx=1, timeRowIdx=1):  # todo
         passInfo = 'PASS'
         Time = ''
         with open(file, 'rb') as f:

@@ -30,7 +30,7 @@ class Window:
         self.runButton = Tkinter.Button(master, text='开始工作', command=self.run)
 
         self.workMode = ttk.Combobox(master, values=['T1/T2', 'T3'], width=5, state='readonly')
-        self.workMode.current(0)
+        self.workMode.current(1)
 
         self.tvScrollBar = Tkinter.Scrollbar(master)
         self.treeview = ttk.Treeview(master, columns=('c1', 'c2', 'c3', 'c4', 'c5'), show="headings", height=20,
@@ -114,6 +114,7 @@ class Window:
         inputSN = self.SNEntry.get()
         if self.dp.addSN(inputSN):
             self.treeview.insert('', Tkinter.END, values=inputSN)
+            self.chooseDirButton['state'] = Tkinter.ACTIVE
 
     def doubleCLickTreeview(self, event):
         item = self.treeview.selection()[0]
